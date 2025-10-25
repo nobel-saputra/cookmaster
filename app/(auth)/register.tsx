@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from "react-native";
 
-export default function ExplorePage() {
+export default function RegisterPage() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Explore Page</Text>
+      <Text style={styles.text}>Register Page</Text>
     </View>
   );
 }
