@@ -1,32 +1,27 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-import { Stack, Redirect } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import "react-native-reanimated";
+// app/_layout.tsx
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
-
-export const unstable_settings = {
-  anchor: "(auth)/login",
-};
+import { useAuthStore } from "@/store/authStore";
+import { Slot, useRouter } from "expo-router";
+import { useEffect } from "react";
+import Toast from "react-native-toast-message";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { isLoggedIn, checkSession } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    const verify = async () => {
+      await checkSession();
+      if (isLoggedIn) router.replace("/(tabs)");
+      else router.replace("/(auth)/login");
+    };
+    verify();
+  }, [isLoggedIn, checkSession, router]);
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-    <Redirect href="/(auth)/login" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
-        />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <>
+      <Slot />
+      <Toast />
+    </>
   );
 }
