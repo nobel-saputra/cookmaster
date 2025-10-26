@@ -1,10 +1,9 @@
-// ✅ Tambahan: Import Toast agar bisa tampilkan notifikasi
-import Toast from "react-native-toast-message";
-
-import { useAuthStore } from "@/store/authStore";
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Button, Pressable, Text, TextInput, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useAuthStore } from "@/store/authStore";
+import Toast from "react-native-toast-message";
+import { styles } from "./style/login";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -17,7 +16,6 @@ export default function LoginScreen() {
     const success = await login(email, password);
     if (success) {
       setError("");
-      // ✅ Tambahan: tampilkan toast jika login berhasil
       Toast.show({
         type: "success",
         text1: "Login berhasil!",
@@ -26,7 +24,6 @@ export default function LoginScreen() {
       setTimeout(() => router.replace("/(tabs)"), 1500);
     } else {
       setError("Email atau password salah/email belum di verifikasi");
-      // ✅ Tambahan: tampilkan toast jika login gagal
       Toast.show({
         type: "error",
         text1: "Login gagal",
@@ -40,18 +37,20 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Text style={{ fontSize: 24, textAlign: "center", marginBottom: 20 }}>Login CookMaster</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>COOK MASTER</Text>
+      <Text style={styles.h2}>Login Page</Text>
 
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={{ borderWidth: 1, padding: 10, marginBottom: 10 }} />
-      <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} style={{ borderWidth: 1, padding: 10, marginBottom: 10 }} />
+      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} />
 
-      {error ? <Text style={{ color: "red", textAlign: "center", marginBottom: 10 }}>{error}</Text> : null}
+      <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} style={styles.input} />
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <Button title="Login" onPress={handleLogin} />
 
       <Pressable onPress={handlePress}>
-        <Text style={{ textAlign: "center", marginTop: 10 }}>Belum punya akun? Daftar</Text>
+        <Text style={styles.linkText}>Belum punya akun? Daftar</Text>
       </Pressable>
     </View>
   );
