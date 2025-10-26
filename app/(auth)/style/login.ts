@@ -16,10 +16,10 @@ export const styles = StyleSheet.create({
     fontSize: 17,
     textAlign: "left",
     marginBottom: 15,
-    fontWeight: "500",
+    fontWeight: "400",
   },
   input: {
-    borderWidth: 1,
+    borderWidth: 2,
     padding: 10,
     marginBottom: 15,
     borderRadius: 8,
@@ -35,6 +35,6 @@ export const styles = StyleSheet.create({
   linkText: {
     textAlign: "center",
     marginTop: 10,
-    color: "#007AFF",
+    color: "#000",
   },
 });

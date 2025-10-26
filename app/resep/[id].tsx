@@ -1,54 +1,50 @@
 import { Resep, useResepStore } from "@/store/resepStore";
-import { usePurchaseStore } from "@/store/purchaseStore"; // 👈 Import Store Pembelian
-import { useCartStore } from "@/store/cartStore"; // 👈 Import Store Keranjang
-import { useAuthStore } from "@/store/authStore"; // 👈 Import Store Auth untuk userId
+import { usePurchaseStore } from "@/store/purchaseStore";
+import { useCartStore } from "@/store/cartStore";
+import { useAuthStore } from "@/store/authStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-// 💡 Menambahkan Pressable dan ActivityIndicator ke import
-import { ActivityIndicator, Alert, Button, Image, Linking, ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Linking,
+  Text,
+  View,
+  Pressable,
+  StatusBar,
+} from "react-native";
 import Toast from "react-native-toast-message";
-import { MaterialCommunityIcons } from "@expo/vector-icons"; // Import icon untuk ceklis
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function DetailResepPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-
-  const { findResepById, deleteResep } = useResepStore();
-
-  // 💡 Ambil state dan action dari store pembelian
+  const { findResepById } = useResepStore();
   const isPurchased = usePurchaseStore((state) => state.isPurchased);
-  const markAsPurchased = usePurchaseStore((state) => state.markAsPurchased); // Diperlukan untuk Beli Langsung
-
-  // 🛒 Ambil action dari store Keranjang
+  const markAsPurchased = usePurchaseStore((state) => state.markAsPurchased);
   const { addToCart } = useCartStore();
-
-  // 👤 Ambil userId dari store Auth (diperlukan untuk AddToCart & Beli Langsung)
   const userId = useAuthStore((state) => state.session?.user?.id);
 
   const [resep, setResep] = useState<Resep | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  // 💡 State isBuying diperlukan lagi untuk simulasi Beli Langsung
   const [isBuying, setIsBuying] = useState(false);
 
-  // Status pembelian saat ini
-  const recipeId = resep?.id || id;
-  const isRecipePurchased = isPurchased(recipeId || "");
+  const recipeId = resep?.id ?? id!;
+  const isRecipePurchased = isPurchased(recipeId);
 
-  // --- Ambil Data Resep dari Zustand/Supabase ---
   useEffect(() => {
     const getData = async () => {
-      if (!id || typeof id !== "string") {
-        setIsLoading(false);
-        return;
-      }
-
+      if (!id) return setIsLoading(false);
       setIsLoading(true);
-
       try {
         const data = await findResepById(id);
         setResep(data);
       } catch (error) {
-        console.error("Gagal mengambil resep:", error);
+        console.error(error);
       } finally {
         setIsLoading(false);
       }
@@ -56,238 +52,474 @@ export default function DetailResepPage() {
     getData();
   }, [id, findResepById]);
 
-  // --- 🛒 FUNGSI TAMBAH KE KERANJANG ---
   const handleAddToCart = async () => {
-    if (!resep || !resep.id) return;
-
-    if (!userId) {
-      Toast.show({ type: "error", text1: "Gagal", text2: "Silakan login untuk menambahkan ke keranjang.", position: "top" });
+    if (!resep?.id || !userId) {
+      Toast.show({ type: "error", text1: "Silakan login terlebih dahulu." });
       return;
     }
-
     await addToCart(resep.id, userId);
-
-    // Arahkan pengguna ke halaman keranjang
     router.push("/(tabs)/cart");
+    
   };
 
-  // --- 💰 FUNGSI BELI LANGSUNG ---
   const handleBuyDirectly = () => {
-    if (!resep || !resep.id || isBuying) return;
-
-    if (!userId) {
-      Toast.show({ type: "error", text1: "Gagal", text2: "Silakan login untuk melakukan pembelian langsung.", position: "top" });
-      return;
-    }
-
-    // 1. Tampilkan konfirmasi
-    Alert.alert("Konfirmasi Pembelian", `Yakin ingin membeli resep "${resep.judul}" seharga Rp ${resep.harga}?`, [
-      { text: "Batal", style: "cancel" },
-      {
-        text: "Beli Sekarang",
-        onPress: async () => {
-          setIsBuying(true);
-
-          // 2. Simulasi Loading Transaksi (3 detik)
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-
-          // 3. Tandai sebagai sudah dibeli di store persisten
-          markAsPurchased(resep.id!);
-
-          setIsBuying(false);
-
-          // 4. Tampilkan notifikasi sukses
-          Toast.show({
-            type: "success",
-            text1: "Transaksi Berhasil! 🎉",
-            text2: `Resep "${resep.judul}" kini menjadi milik Anda.`,
-            position: "top",
-          });
+    if (!resep?.id || !userId || isBuying) return;
+    Alert.alert(
+      "Konfirmasi Pembelian",
+      `Yakin ingin membeli "${resep.judul}" seharga Rp ${resep.harga}?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Beli Sekarang",
+          onPress: async () => {
+            setIsBuying(true);
+            await new Promise((r) => setTimeout(r, 2000));
+            markAsPurchased(resep.id!);
+            setIsBuying(false);
+            Toast.show({
+              type: "success",
+              text1: "Berhasil!",
+              text2: `Resep "${resep.judul}" kini milikmu.`,
+            });
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
-  // --- FUNGSI LIHAT RESEP (Menggantikan Unduh PDF) ---
   const handleViewRecipe = () => {
-    if (resep?.bahan && resep.bahan.length > 0) {
-      const pdfUrl = resep.bahan[0];
-      if (pdfUrl && (pdfUrl.startsWith("http") || pdfUrl.startsWith("https"))) {
-        Linking.openURL(pdfUrl);
-      } else {
-        Alert.alert("Informasi", "URL Resep tidak valid.");
-      }
-    } else {
-      Alert.alert("Informasi", "File resep tidak tersedia.");
+    const pdfUrl = resep?.bahan?.[0];
+    if (pdfUrl?.startsWith("http")) Linking.openURL(pdfUrl);
+    else Alert.alert("Informasi", "File resep tidak tersedia.");
+  };
+
+  const handleEdit = () => {
+    if (resep?.id) {
+      router.push(`/edit/${resep.id}`);
     }
   };
 
-  // --- FUNGSI EDIT & DELETE (Tidak Berubah) ---
-  const handleEdit = () => {
-    // Logika edit
-  };
   const handleDelete = () => {
-    // Logika delete
+    Alert.alert(
+      "Konfirmasi Hapus",
+      `Yakin ingin menghapus resep "${resep?.judul}"?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: () => {
+            // TODO: Implementasi logika delete
+            Toast.show({
+              type: "success",
+              text1: "Resep berhasil dihapus",
+            });
+            router.back();
+          },
+        },
+      ]
+    );
   };
 
-  // --- RENDER LOADING / ERROR ---
-  if (isLoading) {
+  if (isLoading)
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Memuat Detail Resep...</Text>
+        <ActivityIndicator size="large" color="#FF7A00" />
+        <Text style={styles.loadingText}>Memuat resep...</Text>
       </View>
     );
-  }
 
-  if (!resep) {
+  if (!resep)
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Resep tidak ditemukan. (ID: {id})</Text>
+        <MaterialCommunityIcons name="alert-circle-outline" size={64} color="#ccc" />
+        <Text style={styles.errorText}>Resep tidak ditemukan</Text>
       </View>
     );
-  }
 
-  // --- RENDER KONTEN ---
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.actionButtons}>
-        <Button title="Edit Resep" onPress={handleEdit} color="#007AFF" />
-        <Button title="Hapus Resep" onPress={handleDelete} color="#FF0000" />
-      </View>
+    <>
+      <StatusBar barStyle="light-content" />
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Header Image with Gradient Overlay */}
+        <View style={styles.imageContainer}>
+          {resep.gambar ? (
+            <>
+              <Image source={{ uri: resep.gambar }} style={styles.image} />
+              <LinearGradient
+                colors={["transparent", "rgba(0,0,0,0.7)"]}
+                style={styles.imageGradient}
+              />
+            </>
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <MaterialCommunityIcons name="food" size={80} color="#ddd" />
+            </View>
+          )}
+        </View>
 
-      {/* Gambar Thumbnail */}
-      {resep.gambar && <Image source={{ uri: resep.gambar }} style={styles.image} />}
-
-      <Text style={styles.title}>{resep.judul}</Text>
-      <Text style={styles.deskripsi}>{resep.deskripsi}</Text>
-      <Text style={styles.harga}>Rp {resep.harga}</Text>
-
-      {/* 💡 BAGIAN INI DIGANTI: Tombol Add To Cart dan Beli Langsung */}
-      <View style={styles.buyActionsContainer}>
-        {isRecipePurchased ? (
-          // 🟢 RESEP SUDAH DIBELI
-          <View style={styles.purchasedContainer}>
-            <MaterialCommunityIcons name="check-circle" size={24} color="#00A86B" />
-            <Text style={styles.purchasedText}>Resep Sudah Dibeli</Text>
-            {/* Tombol untuk melihat resep (membuka PDF) */}
-            <Button title="Lihat Resep" color="#007AFF" onPress={handleViewRecipe} />
+        {/* Content Card */}
+        <View style={styles.contentCard}>
+          {/* Title Section */}
+          <View style={styles.titleSection}>
+            <Text style={styles.title}>{resep.judul}</Text>
+            {isRecipePurchased && (
+              <View style={styles.badge}>
+                <MaterialCommunityIcons name="crown" size={16} color="#FFD700" />
+                <Text style={styles.badgeText}>Terbeli</Text>
+              </View>
+            )}
           </View>
-        ) : (
-          // 🟡 RESEP BELUM DIBELI (Tombol Add To Cart & Beli Langsung)
-          <>
-            <Pressable
-              style={[styles.actionButton, styles.addToCartButton]}
-              onPress={handleAddToCart}
-              disabled={isBuying} // Disable jika sedang proses beli langsung
-            >
-              <MaterialCommunityIcons name="cart-plus" size={20} color="#fff" style={{ marginRight: 5 }} />
-              <Text style={styles.buttonText}>Tambah ke Keranjang</Text>
-            </Pressable>
 
-            <Pressable style={[styles.actionButton, styles.buyDirectlyButton]} onPress={handleBuyDirectly} disabled={isBuying}>
-              {isBuying ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="credit-card" size={20} color="#fff" style={{ marginRight: 5 }} />
-                  <Text style={styles.buttonText}>Beli Langsung</Text>
-                </>
-              )}
-            </Pressable>
-          </>
-        )}
-      </View>
+          {/* Description */}
+          <Text style={styles.deskripsi}>{resep.deskripsi}</Text>
 
-      {/* ... (Bahan & Langkah tetap sama) */}
-      <Text style={styles.subTitle}>Bahan:</Text>
-      {/* Tampilkan sisa item di 'bahan' selain URL PDF hanya jika sudah dibeli */}
-      {isRecipePurchased ? Array.isArray(resep.bahan) && resep.bahan.slice(1).map((b: string, idx: number) => <Text key={idx}>• {b}</Text>) : <Text style={styles.lockedText}>Bahan terkunci, silakan beli resep.</Text>}
+          {/* Price Section */}
+          <View style={styles.priceContainer}>
+            <View>
+              <Text style={styles.priceLabel}>Harga</Text>
+              <Text style={styles.harga}>Rp {resep.harga?.toLocaleString("id-ID")}</Text>
+            </View>
+            {isRecipePurchased && (
+              <MaterialCommunityIcons name="check-decagram" size={40} color="#00A86B" />
+            )}
+          </View>
 
-      <Text style={styles.subTitle}>Langkah:</Text>
-      {isRecipePurchased ? (
-        resep.langkah?.map((l: string, idx: number) => (
-          <Text key={idx}>
-            {idx + 1}. {l}
-          </Text>
-        ))
-      ) : (
-        <Text style={styles.lockedText}>Langkah terkunci, silakan beli resep.</Text>
-      )}
+          {/* Action Buttons */}
+          <View style={styles.actionsContainer}>
+            {isRecipePurchased ? (
+              <Pressable 
+                style={styles.viewRecipeButton} 
+                onPress={handleViewRecipe}
+                android_ripple={{ color: "rgba(255,255,255,0.2)" }}
+              >
+                <MaterialCommunityIcons name="book-open-page-variant" size={24} color="#fff" />
+                <Text style={styles.viewRecipeButtonText}>Lihat Resep Lengkap</Text>
+              </Pressable>
+            ) : (
+              <>
+                <Pressable
+                  style={styles.cartButton}
+                  onPress={handleAddToCart}
+                  disabled={isBuying}
+                  android_ripple={{ color: "rgba(255,255,255,0.1)" }}
+                >
+                  <MaterialCommunityIcons name="cart-plus" size={22} color="#fff" />
+                  <Text style={styles.cartButtonText}>Keranjang</Text>
+                </Pressable>
 
-      <View style={{ height: 50 }} />
+                <Pressable
+                  style={[styles.buyButton, isBuying && styles.buyButtonDisabled]}
+                  onPress={handleBuyDirectly}
+                  disabled={isBuying}
+                  android_ripple={{ color: "rgba(255,255,255,0.2)" }}
+                >
+                  {isBuying ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <>
+                      <MaterialCommunityIcons name="lightning-bolt" size={22} color="#fff" />
+                      <Text style={styles.buyButtonText}>Beli Sekarang</Text>
+                    </>
+                  )}
+                </Pressable>
+              </>
+            )}
+          </View>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Edit & Delete Section */}
+          <View style={styles.manageSection}>
+            <Text style={styles.manageSectionTitle}>Kelola Resep</Text>
+            <View style={styles.manageButtons}>
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.manageButton,
+                  styles.editButton,
+                  pressed && styles.manageButtonPressed
+                ]} 
+                onPress={handleEdit}
+                android_ripple={{ color: "rgba(0,122,255,0.1)" }}
+              >
+                <MaterialCommunityIcons name="pencil" size={24} color="#007AFF" />
+                <Text style={styles.editButtonText}>Edit</Text>
+              </Pressable>
+              
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.manageButton,
+                  styles.deleteButton,
+                  pressed && styles.manageButtonPressed
+                ]} 
+                onPress={handleDelete}
+                android_ripple={{ color: "rgba(255,59,48,0.1)" }}
+              >
+                <MaterialCommunityIcons name="delete" size={24} color="#FF3B30" />
+                <Text style={styles.deleteButtonText}>Hapus</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+      
       <Toast />
-    </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  // ... (Styles sebelumnya)
-  centerContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  loadingText: { marginTop: 10, fontSize: 16 },
-  errorText: { fontSize: 18, color: "red" },
-  actionButtons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
-    marginTop: 10,
+  container: { 
+    flex: 1, 
+    backgroundColor: "#f5f5f5" 
   },
-  image: { width: "100%", height: 250, borderRadius: 12, marginBottom: 10 },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
+  centerContainer: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
-  deskripsi: { marginVertical: 10, fontSize: 16 },
-  harga: { fontSize: 18, color: "#FF7A00", marginBottom: 15, fontWeight: "bold" },
-  subTitle: { fontWeight: "bold", marginTop: 10, fontSize: 18 },
+  loadingText: { 
+    marginTop: 16, 
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "500",
+  },
+  errorText: { 
+    fontSize: 18, 
+    color: "#999",
+    marginTop: 16,
+    fontWeight: "600",
+  },
+  
+  // Image Section
+  imageContainer: {
+    width: "100%",
+    height: 320,
+    position: "relative",
+  },
+  image: { 
+    width: "100%", 
+    height: "100%",
+    resizeMode: "cover",
+  },
+  imageGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#e8e8e8",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-  // 💡 STYLES BARU UNTUK DUA TOMBOL (Horizontal, responsif)
-  buyActionsContainer: {
-    marginVertical: 20,
-    flexDirection: "row", // Tata letak horizontal
-    justifyContent: "space-between",
-    gap: 10, // Spasi antara tombol
+  // Content Card
+  contentCard: {
+    backgroundColor: "#fff",
+    marginTop: -30,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  actionButton: {
+
+  // Title Section
+  titleSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: "800",
+    color: "#1a1a1a",
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    letterSpacing: -0.5,
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF8E1",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#F57C00",
+  },
+
+  // Description
+  deskripsi: { 
+    fontSize: 16, 
+    color: "#666",
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+
+  // Price Section
+  priceContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FFF3E0",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 20,
+  },
+  priceLabel: {
+    fontSize: 13,
+    color: "#F57C00",
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  harga: { 
+    fontSize: 26, 
+    fontWeight: "800",
+    color: "#FF7A00",
+    letterSpacing: -0.5,
+  },
+
+  // Action Buttons
+  actionsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  cartButton: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#2C3E50",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    flexDirection: "row",
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  addToCartButton: {
-    backgroundColor: "#333", // Warna netral untuk Tambah Keranjang
-  },
-  buyDirectlyButton: {
-    backgroundColor: "#FF7A00", // Warna cerah untuk Beli Langsung
-  },
-  buttonText: {
+  cartButtonText: {
     color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  buyButton: {
+    flex: 1.5,
+    flexDirection: "row",
+    backgroundColor: "#FF7A00",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    shadowColor: "#FF7A00",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  buyButtonDisabled: {
+    opacity: 0.7,
+  },
+  buyButtonText: {
+    color: "#fff",
+    fontWeight: "800",
     fontSize: 16,
-    fontWeight: "bold",
+  },
+  viewRecipeButton: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#00A86B",
+    paddingVertical: 18,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    shadowColor: "#00A86B",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  viewRecipeButtonText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 17,
   },
 
-  purchasedContainer: {
+  // Divider
+  divider: {
+    height: 1,
+    backgroundColor: "#e8e8e8",
+    marginVertical: 24,
+  },
+
+  // Manage Section
+  manageSection: {
+    marginTop: 8,
+  },
+  manageSectionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#888",
+    marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  manageButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  manageButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#E0F7FA", // Light cyan background
-    padding: 15,
-    borderRadius: 8,
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 14,
+    gap: 8,
+    borderWidth: 2,
   },
-  purchasedText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#00A86B", // Green text
+  manageButtonPressed: {
+    transform: [{ scale: 0.96 }],
+    opacity: 0.8,
   },
-  lockedText: {
-    fontStyle: "italic",
-    color: "#888",
-    marginTop: 5,
-    marginBottom: 10,
+  editButton: {
+    backgroundColor: "#E3F2FD",
+    borderColor: "#007AFF",
+  },
+  editButtonText: {
+    color: "#007AFF",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  deleteButton: {
+    backgroundColor: "#FFEBEE",
+    borderColor: "#FF3B30",
+  },
+  deleteButtonText: {
+    color: "#FF3B30",
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

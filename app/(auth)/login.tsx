@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Button, Pressable, Text, TextInput, View } from "react-native";
-import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/authStore";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { styles } from "./style/login";
 
@@ -41,17 +41,49 @@ export default function LoginScreen() {
       <Text style={styles.title}>COOK MASTER</Text>
       <Text style={styles.h2}>Login Page</Text>
 
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} />
+      <TextInput
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        style={styles.input}
+      />
 
-      <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} style={styles.input} />
+      <TextInput
+        placeholder="Password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        style={styles.input}
+      />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Button title="Login" onPress={handleLogin} />
-
-      <Pressable onPress={handlePress}>
-        <Text style={styles.linkText}>Belum punya akun? Daftar</Text>
+      <Pressable
+        onPress={handleLogin}
+        style={({ pressed }) => [
+          {
+            backgroundColor: pressed ? "#3B40A0" : "#4E56C0", // warna saat ditekan lebih gelap
+            paddingVertical: 12,
+            borderRadius: 8,
+            alignItems: "center",
+            marginBottom: 10,
+          },
+        ]}
+      >
+        <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+          LOGIN
+        </Text>
       </Pressable>
+
+      <Text style={{ textAlign: "center", marginTop: 10 }}>
+        Belum punya akun?{" "}
+        <Text
+          style={{ color: "#4E56C0", fontWeight: "bold" }}
+          onPress={handlePress}
+        >
+          Daftar
+        </Text>
+      </Text>
     </View>
   );
 }
