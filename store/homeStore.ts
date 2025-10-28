@@ -1,18 +1,20 @@
 // store/homeStore.ts
-import { create } from 'zustand';
-import { supabase } from '@/lib/supabase';
+import { create } from "zustand";
+import { supabase } from "@/lib/supabase";
 
+// --- Struktur data untuk statistik halaman utama ---
 interface HomeStats {
   totalResep: number;
   totalFavorit: number;
-  resepTerbaru: Array<{
+  resepTerbaru: {
     id: number;
     judul: string;
     gambar: string | null;
     created_at: string;
-  }>;
+  }[];
 }
 
+// --- Struktur state dan fungsi utama store ---
 interface HomeState {
   stats: HomeStats;
   loading: boolean;
@@ -20,6 +22,7 @@ interface HomeState {
   fetchHomeData: () => Promise<void>;
 }
 
+// --- Store untuk mengelola data beranda aplikasi ---
 export const useHomeStore = create<HomeState>((set) => ({
   stats: {
     totalResep: 0,
@@ -29,28 +32,22 @@ export const useHomeStore = create<HomeState>((set) => ({
   loading: false,
   error: null,
 
+  // Ambil data statistik dan resep terbaru dari Supabase
   fetchHomeData: async () => {
     set({ loading: true, error: null });
     try {
-      // Fetch total resep
-      const { count: totalResep, error: resepError } = await supabase
-        .from('resep')
-        .select('*', { count: 'exact', head: true });
+      // Hitung total jumlah resep
+      const { count: totalResep, error: resepError } = await supabase.from("resep").select("*", { count: "exact", head: true });
 
       if (resepError) throw resepError;
 
-      // Fetch resep terbaru (3 resep terakhir)
-      const { data: resepTerbaru, error: terbaruError } = await supabase
-        .from('resep')
-        .select('id, judul, gambar, created_at')
-        .order('created_at', { ascending: false })
-        .limit(3);
+      // Ambil 3 resep terbaru berdasarkan tanggal dibuat
+      const { data: resepTerbaru, error: terbaruError } = await supabase.from("resep").select("id, judul, gambar, created_at").order("created_at", { ascending: false }).limit(3);
 
       if (terbaruError) throw terbaruError;
 
-      // Untuk favorite, kita bisa tambahkan nanti jika ada tabel favorit
-      // Sementara ini hardcode atau hitung dari view count
-      const totalFavorit = Math.floor((totalResep || 0) * 0.6); // simulasi 60% resep di-favorit
+      // Simulasi jumlah favorit (sementara 60% dari total resep)
+      const totalFavorit = Math.floor((totalResep || 0) * 0.6);
 
       set({
         stats: {
@@ -61,9 +58,9 @@ export const useHomeStore = create<HomeState>((set) => ({
         loading: false,
       });
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Gagal memuat data',
-        loading: false 
+      set({
+        error: error instanceof Error ? error.message : "Gagal memuat data",
+        loading: false,
       });
     }
   },

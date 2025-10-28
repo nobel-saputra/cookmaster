@@ -1,9 +1,11 @@
 // store/cartStore.ts
+
+// Mengimpor Supabase client, notifikasi Toast, dan Zustand untuk manajemen state
 import { supabase } from "@/lib/supabaseClient";
 import Toast from "react-native-toast-message";
 import { create } from "zustand";
 
-// --- Interface Data ---
+// Tipe data untuk item dalam keranjang
 interface CartItem {
   id: string;
   resep_id: string;
@@ -14,6 +16,7 @@ interface CartItem {
   harga: number;
 }
 
+// Struktur state keranjang belanja dan fungsi yang tersedia
 interface CartStore {
   cartItems: CartItem[];
   loading: boolean;
@@ -23,11 +26,12 @@ interface CartStore {
   checkout: (userId: string, resepStore: any) => Promise<void>;
 }
 
+// Membuat store Zustand untuk mengelola data dan aksi keranjang belanja
 export const useCartStore = create<CartStore>((set, get) => ({
   cartItems: [],
   loading: false,
 
-  // 🔹 Ambil item keranjang dari Supabase (dengan data resep)
+  // Mengambil data keranjang dari Supabase dan memetakan ke format CartItem
   fetchCart: async (userId) => {
     set({ loading: true });
 
@@ -68,7 +72,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ loading: false });
   },
 
-  // 🔹 Tambah item ke keranjang
+  // Menambahkan item baru ke keranjang jika belum ada
   addToCart: async (resepId, userId) => {
     const existingItem = get().cartItems.find((item) => item.resep_id === resepId);
     if (existingItem) {
@@ -120,7 +124,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
   },
 
-  // 🔹 Hapus item dari keranjang
+  // Menghapus item dari keranjang berdasarkan ID
   removeItem: async (itemId) => {
     const { error } = await supabase.from("cart_items").delete().eq("id", itemId);
 
@@ -140,7 +144,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
   },
 
-  // 🔹 Simulasi Checkout
+  // Melakukan proses checkout dan menghapus item setelah pembelian
   checkout: async (userId, resepStore) => {
     const itemsToPurchase = get().cartItems;
     if (itemsToPurchase.length === 0) return;

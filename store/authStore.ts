@@ -1,20 +1,19 @@
+// Mengimpor dependensi Supabase dan Zustand untuk manajemen state
 import { supabase } from "@/lib/supabase";
 import { create } from "zustand";
 
-// --- Definisi Tipe Supabase Minimal ---
+// Mendefinisikan tipe user dari Supabase yang digunakan dalam aplikasi
 interface SupabaseUser {
-  id: string; // Properti utama yang kita butuhkan di cart.tsx
-  // Tambahkan properti lain dari objek user Supabase di sini jika diperlukan
+  id: string;
 }
 
+// Mendefinisikan tipe session Supabase untuk autentikasi
 interface SupabaseSession {
   user: SupabaseUser | null;
-  // Tambahkan properti lain dari objek session Supabase di sini jika diperlukan
 }
-// -------------------------------------
 
+// Struktur state autentikasi dan fungsi yang tersedia
 interface AuthState {
-  // 💡 Tipe Session diubah dari 'any' menjadi tipe spesifik atau null
   session: SupabaseSession | null;
   isLoggedIn: boolean;
   login: (email: string, password: string) => Promise<boolean>;
@@ -23,47 +22,34 @@ interface AuthState {
   checkSession: () => Promise<void>;
 }
 
+// Membuat store Zustand untuk mengelola status autentikasi pengguna
 export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   isLoggedIn: false,
 
-  // ✅ LOGIN FUNCTION (tanpa cek verifikasi email)
+  // Fungsi login pengguna menggunakan email dan password
   login: async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.session) return false;
-
-    // Tipe session kini sesuai dengan SupabaseSession | null
     set({ session: data.session as SupabaseSession, isLoggedIn: true });
     return true;
   },
 
-  // ✅ REGISTER FUNCTION
+  // Fungsi registrasi pengguna baru
   register: async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      return { success: false, message: error.message };
-    }
-
-    // Tipe session kini sesuai dengan SupabaseSession | null
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return { success: false, message: error.message };
     set({ session: data.session as SupabaseSession, isLoggedIn: !!data.session });
     return { success: true };
   },
 
-  // ✅ LOGOUT FUNCTION
+  // Fungsi logout untuk mengakhiri sesi pengguna
   logout: async () => {
     await supabase.auth.signOut();
     set({ session: null, isLoggedIn: false });
   },
 
-  // ✅ CHECK SESSION FUNCTION
+  // Fungsi untuk memeriksa sesi pengguna yang masih aktif
   checkSession: async () => {
     const { data } = await supabase.auth.getSession();
     set({ session: data.session as SupabaseSession | null, isLoggedIn: !!data.session });
