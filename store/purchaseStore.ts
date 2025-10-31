@@ -1,46 +1,77 @@
+// app/store/purchaseStore.ts
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "./authStore";
 
-// Store untuk mengelola data pembelian resep
-interface PurchaseState {
-  // Menyimpan ID resep yang sudah dibeli
-  purchasedIds: string[];
-
-  // Tandai resep sebagai sudah dibeli
-  markAsPurchased: (id: string) => void;
-
-  // Periksa apakah resep sudah dibeli
-  isPurchased: (id: string) => boolean;
+interface Purchase {
+  id: string;
+  user_id: string;
+  recipe_id: string;
+  price: number;
+  purchase_date: string;
 }
 
-// Persist store agar data tetap tersimpan di AsyncStorage
-export const usePurchaseStore = create<PurchaseState>()(
-  persist(
-    (set, get) => ({
-      // Array penyimpanan ID resep yang sudah dibeli
-      purchasedIds: [],
+interface PurchaseStore {
+  purchases: Purchase[];
+  loading: boolean;
+  error: string | null;
 
-      // Tambahkan ID resep ke daftar pembelian jika belum ada
-      markAsPurchased: (id) => {
-        if (!get().purchasedIds.includes(id)) {
-          set((state) => ({
-            purchasedIds: [...state.purchasedIds, id],
-          }));
-        }
-      },
+  // Ambil semua pembelian user dari Supabase
+  fetchPurchases: (userId: string) => Promise<void>;
 
-      // Periksa status pembelian resep
-      isPurchased: (id) => {
-        return get().purchasedIds.includes(id);
-      },
-    }),
-    {
-      // Kunci penyimpanan unik di AsyncStorage
-      name: "resep-purchases-storage",
+  // Tambah pembelian baru ke Supabase
+  addPurchase: (recipeId: string, price: number) => Promise<void>;
 
-      // Gunakan AsyncStorage untuk menyimpan data secara persist
-      storage: createJSONStorage(() => AsyncStorage),
+  // Cek apakah user sudah beli resep tertentu
+  isPurchased: (recipeId: string) => boolean;
+}
+
+export const usePurchaseStore = create<PurchaseStore>((set, get) => ({
+  purchases: [],
+  loading: false,
+  error: null,
+
+  fetchPurchases: async (userId) => {
+    set({ loading: true, error: null });
+    const { data, error } = await supabase.from("purchase_history").select("id, user_id, recipe_id, price, purchase_date").eq("user_id", userId).order("purchase_date", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching purchase history:", error);
+      set({ error: error.message, loading: false });
+    } else {
+      set({ purchases: data || [], loading: false });
     }
-  )
-);
+  },
+
+  addPurchase: async (recipeId, price) => {
+    const user = useAuthStore.getState().session?.user;
+    if (!user) {
+      set({ error: "User not logged in" });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("purchase_history")
+      .insert([
+        {
+          user_id: user.id,
+          recipe_id: recipeId,
+          price: price,
+        },
+      ])
+      .select();
+
+    if (error) {
+      console.error("Error adding purchase:", error);
+      set({ error: error.message });
+    } else {
+      set((state) => ({
+        purchases: [...state.purchases, ...(data || [])],
+      }));
+    }
+  },
+
+  isPurchased: (recipeId) => {
+    return get().purchases.some((p) => p.recipe_id === recipeId);
+  },
+}));

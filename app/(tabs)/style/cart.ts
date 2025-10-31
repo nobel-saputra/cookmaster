@@ -7,7 +7,7 @@ export const cartStyle = StyleSheet.create({
   errorText: { fontSize: 18, color: "red" },
   emptyText: { fontSize: 18, color: "#999", marginTop: 10, marginBottom: 20 },
   scrollContent: { padding: 15 },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 20, color: "#333" },
+  header: { fontSize: 22, fontWeight: "bold", marginBottom: 20, color: "#333", marginTop: 30, },
 
   cartItem: {
     flexDirection: "row",

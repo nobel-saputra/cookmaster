@@ -1,8 +1,9 @@
 // app/resep/[id].tsx
 
-// Impport component
+// Import component
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
+import { usePurchaseHistoryStore } from "@/store/purchaseHistory";
 import { usePurchaseStore } from "@/store/purchaseStore";
 import { Resep, useResepStore } from "@/store/resepStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -22,8 +23,9 @@ export default function DetailResepPage() {
   // Inisialisasi store yang digunakan
   const { findResepById, deleteResep } = useResepStore();
   const isPurchased = usePurchaseStore((state) => state.isPurchased);
-  const markAsPurchased = usePurchaseStore((state) => state.markAsPurchased);
+  const markAsPurchased = usePurchaseStore((state) => state.isPurchased);
   const { addToCart } = useCartStore();
+  const { addPurchaseHistory, checkIfPurchased } = usePurchaseHistoryStore();
   const userId = useAuthStore((state) => state.session?.user?.id);
 
   // State untuk data dan status loading
@@ -31,12 +33,13 @@ export default function DetailResepPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isBuying, setIsBuying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPurchasedFromDB, setIsPurchasedFromDB] = useState(false);
 
   // Cek status pembelian resep
   const recipeId = resep?.id ?? id!;
-  const isRecipePurchased = isPurchased(recipeId);
+  const isRecipePurchased = isPurchased(recipeId) || isPurchasedFromDB;
 
-  // Ambil data resep berdasarkan ID
+  // Ambil data resep berdasarkan ID dan cek status pembelian
   useEffect(() => {
     const getData = async () => {
       if (!id) return setIsLoading(false);
@@ -44,6 +47,17 @@ export default function DetailResepPage() {
       try {
         const data = await findResepById(id as string);
         setResep(data);
+
+        // Cek apakah sudah dibeli di database
+        if (userId) {
+          const purchased = await checkIfPurchased(userId, id as string);
+          setIsPurchasedFromDB(purchased);
+
+          // Sync dengan local store jika sudah dibeli
+          if (purchased && !isPurchased(id as string)) {
+            markAsPurchased(id as string);
+          }
+        }
       } catch (error) {
         console.error(error);
       } finally {
@@ -51,7 +65,7 @@ export default function DetailResepPage() {
       }
     };
     getData();
-  }, [id, findResepById]);
+  }, [id, findResepById, userId, checkIfPurchased, isPurchased, markAsPurchased]);
 
   // Tambah resep ke keranjang
   const handleAddToCart = async () => {
@@ -81,14 +95,45 @@ export default function DetailResepPage() {
         text: "Beli Sekarang",
         onPress: async () => {
           setIsBuying(true);
-          await new Promise((r) => setTimeout(r, 2000));
-          markAsPurchased(resep.id as string);
-          setIsBuying(false);
-          Toast.show({
-            type: "success",
-            text1: "Berhasil!",
-            text2: `Resep "${resep.judul}" kini milikmu.`,
-          });
+
+          try {
+            // Simulasi proses pembayaran
+            await new Promise((r) => setTimeout(r, 2000));
+
+            // Simpan ke database purchase_history
+            const purchaseResult = await addPurchaseHistory({
+              user_id: userId as string,
+              recipe_id: resep.id as string,
+              price: resep.harga || 0,
+            });
+
+            if (purchaseResult) {
+              // Tandai sebagai terbeli di local store
+              markAsPurchased(resep.id as string);
+              setIsPurchasedFromDB(true);
+
+              Toast.show({
+                type: "success",
+                text1: "Berhasil!",
+                text2: `Resep "${resep.judul}" kini milikmu.`,
+              });
+            } else {
+              Toast.show({
+                type: "error",
+                text1: "Gagal",
+                text2: "Terjadi kesalahan saat menyimpan pembelian.",
+              });
+            }
+          } catch (error) {
+            console.error(error);
+            Toast.show({
+              type: "error",
+              text1: "Gagal",
+              text2: "Terjadi kesalahan saat memproses pembelian.",
+            });
+          } finally {
+            setIsBuying(false);
+          }
         },
       },
     ]);
