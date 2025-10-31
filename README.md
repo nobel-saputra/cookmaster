@@ -1,3 +1,8 @@
+LINK LOOM : 
+https://www.loom.com/share/6c5ad6e522fd48ee9d402cfc50b59181
+
+
+
 # CookMaster - Aplikasi Manajemen Resep 🍳
 
 CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan React Native dan Expo. Aplikasi ini memungkinkan pengguna untuk menemukan, membeli, dan mengelola resep masakan dengan fungsionalitas keranjang belanja terintegrasi dan otentikasi pengguna.
@@ -11,6 +16,11 @@ CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan Rea
 - **Keranjang Belanja**: Tambahkan resep ke keranjang untuk pembelian nanti
 - **Detail Resep**: Lihat informasi resep secara detail dengan gambar dan instruksi
 - **Profil Pengguna**: Kelola akun dan resep yang telah dibeli
+- **Upload File**: Upload gambar resep dan dokumen PDF instruksi
+- **Sistem Pembelian Lengkap**: Riwayat pembelian dan manajemen resep terbeli
+- **Validasi Form**: Validasi input form menggunakan Zod untuk keamanan dan kenyamanan
+- **Badge Resep Terbeli**: Indikator visual untuk resep yang telah dibeli
+- **Tampilan Animasi**: UI dengan efek animasi untuk pengalaman pengguna yang lebih baik
 
 ## Teknologi yang Digunakan
 
@@ -20,7 +30,12 @@ CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan Rea
 - **Komponen UI**: Komponen bawaan React Native dengan ikon vektor
 - **Validasi**: [Zod](https://github.com/colinhacks/zod) untuk validasi formulir
 - **Navigasi**: Expo Router dengan routing berbasis file
-- **Penanganan File**: Pemilih gambar dan kemampuan melihat PDF
+- **Penanganan File**: Expo DocumentPicker, Expo Image Picker, dan base64-arraybuffer untuk upload gambar dan PDF
+- **Notifikasi**: React Native Toast Message untuk pesan UI
+- **Efek Visual**: Expo Linear Gradient untuk efek tampilan
+- **Animasi**: React Native Reanimated untuk efek animasi halus
+- **Utilitas File**: React Native FS untuk manajemen file lokal
+- **Ikon Vektor**: Expo Vector Icons dan React Native Vector Icons
 
 ## Struktur Proyek
 
@@ -39,13 +54,30 @@ cookmaster/
 │   ├── cartStore.ts       # State keranjang belanja
 │   ├── homeStore.ts       # State layar beranda
 │   ├── purchaseStore.ts   # State riwayat pembelian
+│   ├── purchaseHistory.ts # State dan fungsi untuk riwayat pembelian
 │   └── resepStore.ts      # State manajemen resep
 ├── lib/                   # File-file library
 │   ├── supabase.ts        # Konfigurasi klien Supabase
 │   └── supabaseClient.ts  # Instance klien Supabase
 ├── assets/                # Gambar dan aset statis lainnya
 ├── hooks/                 # Hook React kustom
-└── constants/             # Konstanta aplikasi
+├── constants/             # Konstanta aplikasi
+├── scripts/               # Script untuk pengembangan
+└── app/(tabs)/style/      # File-file styling untuk komponen tab
+    ├── cart.ts            # Gaya untuk komponen keranjang
+    ├── explore.ts         # Gaya untuk komponen eksplorasi
+    ├── index.ts           # Gaya untuk komponen beranda
+    ├── profile.ts         # Gaya untuk komponen profil
+    └── ...                # File-file style lainnya
+└── app/resep/style/       # File-file styling untuk komponen resep
+    ├── [id].ts            # Gaya untuk halaman detail resep
+    ├── add.ts             # Gaya untuk halaman tambah resep
+    └── ...                # File-file style lainnya
+└── app/edit/style/        # File-file styling untuk komponen edit
+    └── [id].ts            # Gaya untuk halaman edit resep
+└── app/(auth)/style/      # File-file styling untuk komponen otentikasi
+    ├── login.ts           # Gaya untuk halaman login
+    └── register.ts        # Gaya untuk halaman register
 ```
 
 ## Instalasi
@@ -157,6 +189,3 @@ Aplikasi ini menggunakan Supabase sebagai layanan backend:
 5. Push ke branch (`git push origin fitur/fitur-luar-biasa`)
 6. Buka Pull Request
 
-## Lisensi
-
-Proyek ini dilisensikan di bawah Lisensi MIT - lihat file [LICENSE](LICENSE) untuk detail selengkapnya.
