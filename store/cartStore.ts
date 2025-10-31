@@ -1,11 +1,9 @@
-// store/cartStore.ts
-
-// Mengimpor Supabase client, notifikasi Toast, dan Zustand untuk manajemen state
 import { supabase } from "@/lib/supabaseClient";
 import Toast from "react-native-toast-message";
 import { create } from "zustand";
+import { usePurchaseStore } from "./purchaseStore";
 
-// Tipe data untuk item dalam keranjang
+// Tipe data item dalam keranjang
 interface CartItem {
   id: string;
   resep_id: string;
@@ -16,36 +14,34 @@ interface CartItem {
   harga: number;
 }
 
-// Struktur state keranjang belanja dan fungsi yang tersedia
+// Struktur state & aksi
 interface CartStore {
   cartItems: CartItem[];
   loading: boolean;
   fetchCart: (userId: string) => Promise<void>;
   addToCart: (resepId: string, userId: string) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
-  checkout: (userId: string, resepStore: any) => Promise<void>;
+  checkout: (userId: string) => Promise<void>;
 }
 
-// Membuat store Zustand untuk mengelola data dan aksi keranjang belanja
+// Store Zustand
 export const useCartStore = create<CartStore>((set, get) => ({
   cartItems: [],
   loading: false,
 
-  // Mengambil data keranjang dari Supabase dan memetakan ke format CartItem
+  // Ambil keranjang dari database
   fetchCart: async (userId) => {
     set({ loading: true });
 
     const { data, error } = await supabase
       .from("cart_items")
-      .select(
-        `
+      .select(`
         id,
         user_id,
         resep_id,
         quantity,
         resep:resep_id (judul, gambar, harga)
-      `
-      )
+      `)
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -72,7 +68,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ loading: false });
   },
 
-  // Menambahkan item baru ke keranjang jika belum ada
+  // Tambah ke keranjang
   addToCart: async (resepId, userId) => {
     const existingItem = get().cartItems.find((item) => item.resep_id === resepId);
     if (existingItem) {
@@ -89,20 +85,18 @@ export const useCartStore = create<CartStore>((set, get) => ({
     const { data, error } = await supabase
       .from("cart_items")
       .insert([newCartItem])
-      .select(
-        `
+      .select(`
         id,
         user_id,
         resep_id,
         quantity,
         resep:resep_id (judul, gambar, harga)
-      `
-      )
+      `)
       .single();
 
     if (error) {
       console.error("Gagal tambah ke cart:", error);
-      Toast.show({ type: "error", text1: "Gagal", text2: error.message, position: "top" });
+      Toast.show({ type: "error", text1: "Gagal", text2: error.message });
     } else {
       const resep = Array.isArray(data.resep) ? data.resep[0] : data.resep;
       const newItem: CartItem = {
@@ -119,18 +113,17 @@ export const useCartStore = create<CartStore>((set, get) => ({
         type: "success",
         text1: "Berhasil",
         text2: "Resep ditambahkan ke keranjang.",
-        position: "top",
       });
     }
   },
 
-  // Menghapus item dari keranjang berdasarkan ID
+  // Hapus item
   removeItem: async (itemId) => {
     const { error } = await supabase.from("cart_items").delete().eq("id", itemId);
 
     if (error) {
       console.error("Gagal hapus dari cart:", error);
-      Toast.show({ type: "error", text1: "Gagal Hapus", text2: error.message, position: "top" });
+      Toast.show({ type: "error", text1: "Gagal Hapus", text2: error.message });
     } else {
       set((state) => ({
         cartItems: state.cartItems.filter((item) => item.id !== itemId),
@@ -139,42 +132,44 @@ export const useCartStore = create<CartStore>((set, get) => ({
         type: "success",
         text1: "Terhapus",
         text2: "Item dihapus dari keranjang.",
-        position: "top",
       });
     }
   },
 
-  // Melakukan proses checkout dan menghapus item setelah pembelian
-  checkout: async (userId, resepStore) => {
+  // Checkout dan simpan ke purchase_history
+  checkout: async (userId) => {
     const itemsToPurchase = get().cartItems;
     if (itemsToPurchase.length === 0) return;
 
+    const { addPurchase } = usePurchaseStore.getState();
     set({ loading: true });
-    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const markAsPurchased = resepStore.markAsPurchased;
-    itemsToPurchase.forEach((item) => markAsPurchased(item.resep_id));
+    try {
+      // Insert semua pembelian ke Supabase via purchaseStore
+      for (const item of itemsToPurchase) {
+        await addPurchase(item.resep_id, item.harga);
+      }
 
-    const itemIds = itemsToPurchase.map((item) => item.id);
-    const { error } = await supabase.from("cart_items").delete().in("id", itemIds);
+      // Hapus semua item dari keranjang setelah sukses
+      const itemIds = itemsToPurchase.map((item) => item.id);
+      const { error } = await supabase.from("cart_items").delete().in("id", itemIds);
+      if (error) throw error;
 
-    if (error) {
-      console.error("Gagal clear cart setelah checkout:", error);
+      set({ cartItems: [], loading: false });
+
+      Toast.show({
+        type: "success",
+        text1: "Pembelian Berhasil!",
+        text2: "Data pembelian disimpan ke database.",
+      });
+    } catch (err: any) {
+      console.error("Checkout gagal:", err.message);
       Toast.show({
         type: "error",
         text1: "Error Checkout",
-        text2: "Gagal menghapus item dari keranjang.",
+        text2: err.message,
       });
       set({ loading: false });
-      return;
     }
-
-    set({ cartItems: [], loading: false });
-    Toast.show({
-      type: "success",
-      text1: "Pembelian Sukses!",
-      text2: "Resep berhasil dibeli.",
-      position: "top",
-    });
   },
 }));

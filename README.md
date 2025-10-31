@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 LINK LOOM : 
+=======
+LINK VIDEO LOOM : 
+>>>>>>> 4bd909052999a26df348113c052f02a36da44ba3
 https://www.loom.com/share/6c5ad6e522fd48ee9d402cfc50b59181
 
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4bd909052999a26df348113c052f02a36da44ba3
 # CookMaster - Aplikasi Manajemen Resep 🍳
 
 CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan React Native dan Expo. Aplikasi ini memungkinkan pengguna untuk menemukan, membeli, dan mengelola resep masakan dengan fungsionalitas keranjang belanja terintegrasi dan otentikasi pengguna.
@@ -28,14 +36,18 @@ CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan Rea
 - **Manajemen State**: [Zustand](https://github.com/pmndrs/zustand)
 - **Database**: [Supabase](https://supabase.com) (PostgreSQL, Auth, Storage)
 - **Komponen UI**: Komponen bawaan React Native dengan ikon vektor
-- **Validasi**: [Zod](https://github.com/colinhacks/zod) untuk validasi formulir
 - **Navigasi**: Expo Router dengan routing berbasis file
+<<<<<<< HEAD
 - **Penanganan File**: Expo DocumentPicker, Expo Image Picker, dan base64-arraybuffer untuk upload gambar dan PDF
 - **Notifikasi**: React Native Toast Message untuk pesan UI
 - **Efek Visual**: Expo Linear Gradient untuk efek tampilan
 - **Animasi**: React Native Reanimated untuk efek animasi halus
 - **Utilitas File**: React Native FS untuk manajemen file lokal
 - **Ikon Vektor**: Expo Vector Icons dan React Native Vector Icons
+=======
+- **Penanganan File**: Pemilih gambar dan kemampuan melihat PDF
+- **Validasi**: [Zod](https://github.com/colinhacks/zod) untuk validasi formulir (opsional)
+>>>>>>> 4bd909052999a26df348113c052f02a36da44ba3
 
 ## Struktur Proyek
 
@@ -62,6 +74,7 @@ cookmaster/
 ├── assets/                # Gambar dan aset statis lainnya
 ├── hooks/                 # Hook React kustom
 ├── constants/             # Konstanta aplikasi
+<<<<<<< HEAD
 ├── scripts/               # Script untuk pengembangan
 └── app/(tabs)/style/      # File-file styling untuk komponen tab
     ├── cart.ts            # Gaya untuk komponen keranjang
@@ -78,6 +91,11 @@ cookmaster/
 └── app/(auth)/style/      # File-file styling untuk komponen otentikasi
     ├── login.ts           # Gaya untuk halaman login
     └── register.ts        # Gaya untuk halaman register
+=======
+├── scripts/               # Skrip pengembangan
+├── .expo/                 # Konfigurasi Expo lokal
+└── node_modules/          # Dependensi proyek
+>>>>>>> 4bd909052999a26df348113c052f02a36da44ba3
 ```
 
 ## Instalasi

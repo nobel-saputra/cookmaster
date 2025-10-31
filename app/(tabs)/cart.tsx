@@ -32,7 +32,7 @@ export default function CartPage() {
       {
         text: "Bayar",
         onPress: () => {
-          checkout(userId, purchaseStore);
+          checkout(userId);
           setTimeout(() => router.replace("/(tabs)/profile"), 500);
         },
       },
