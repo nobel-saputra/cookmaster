@@ -1,3 +1,9 @@
+LINK VIDEO LOOM : 
+https://www.loom.com/share/6c5ad6e522fd48ee9d402cfc50b59181
+
+
+
+
 # CookMaster - Aplikasi Manajemen Resep 🍳
 
 CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan React Native dan Expo. Aplikasi ini memungkinkan pengguna untuk menemukan, membeli, dan mengelola resep masakan dengan fungsionalitas keranjang belanja terintegrasi dan otentikasi pengguna.
@@ -18,9 +24,9 @@ CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan Rea
 - **Manajemen State**: [Zustand](https://github.com/pmndrs/zustand)
 - **Database**: [Supabase](https://supabase.com) (PostgreSQL, Auth, Storage)
 - **Komponen UI**: Komponen bawaan React Native dengan ikon vektor
-- **Validasi**: [Zod](https://github.com/colinhacks/zod) untuk validasi formulir
 - **Navigasi**: Expo Router dengan routing berbasis file
 - **Penanganan File**: Pemilih gambar dan kemampuan melihat PDF
+- **Validasi**: [Zod](https://github.com/colinhacks/zod) untuk validasi formulir (opsional)
 
 ## Struktur Proyek
 
@@ -45,7 +51,10 @@ cookmaster/
 │   └── supabaseClient.ts  # Instance klien Supabase
 ├── assets/                # Gambar dan aset statis lainnya
 ├── hooks/                 # Hook React kustom
-└── constants/             # Konstanta aplikasi
+├── constants/             # Konstanta aplikasi
+├── scripts/               # Skrip pengembangan
+├── .expo/                 # Konfigurasi Expo lokal
+└── node_modules/          # Dependensi proyek
 ```
 
 ## Instalasi
