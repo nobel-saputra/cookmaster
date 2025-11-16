@@ -4,8 +4,8 @@ import { useHomeStore } from "@/store/homeStore";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Animated, Image, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
-import { indexStyle as styles } from "./style";
+import { ActivityIndicator, StyleSheet, Animated, Image, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+
 
 // Komponen utama halaman Home
 export default function HomeScreen() {
@@ -130,3 +130,171 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f8f9fa",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+  },
+  loadingText: {
+    marginTop: 10,
+    color: "#666",
+    fontSize: 16,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 24,
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  greeting: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 4,
+  },
+  appName: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#00B894",
+    marginBottom: 4,
+  },
+  tagline: {
+    fontSize: 14,
+    color: "#999",
+  },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginTop: 20,
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#E8F8F5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  statContent: {
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 2,
+  },
+  exploreButton: {
+    backgroundColor: "#00B894",
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  exploreText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  section: {
+    paddingHorizontal: 20,
+    marginTop: 24,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#333",
+  },
+  seeAll: {
+    fontSize: 14,
+    color: "#00B894",
+    fontWeight: "600",
+  },
+  recipeCard: {
+    width: 180,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginRight: 16,
+    overflow: "hidden",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    marginBottom: 12,
+  },
+  recipeImage: {
+    width: "100%",
+    height: 120,
+    backgroundColor: "#f0f0f0",
+  },
+  recipePlaceholder: {
+    width: "100%",
+    height: 120,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  recipeInfo: {
+    padding: 12,
+  },
+  recipeTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  recipeFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  recipeTime: {
+    fontSize: 12,
+    color: "#999",
+    marginLeft: 4,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#999",
+  },
+});
