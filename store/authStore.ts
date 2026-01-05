@@ -1,18 +1,31 @@
-// Mengimpor dependensi Supabase dan Zustand untuk manajemen state
+/**
+ * Authentication Store
+ *
+ * Store ini mengelola autentikasi pengguna menggunakan Supabase Auth.
+ * Menyediakan fungsi untuk login, register, logout, dan pengecekan session.
+ */
+
 import { supabase } from "@/lib/supabase";
 import { create } from "zustand";
 
-// Mendefinisikan tipe user dari Supabase yang digunakan dalam aplikasi
+/**
+ * Interface untuk user Supabase
+ */
 interface SupabaseUser {
   id: string;
 }
 
-// Mendefinisikan tipe session Supabase untuk autentikasi
+/**
+ * Interface untuk session Supabase
+ */
 interface SupabaseSession {
   user: SupabaseUser | null;
 }
 
-// Struktur state autentikasi dan fungsi yang tersedia
+/**
+ * Interface untuk Authentication State
+ * Mendefinisikan struktur state dan fungsi-fungsi yang tersedia
+ */
 interface AuthState {
   session: SupabaseSession | null;
   isLoggedIn: boolean;
@@ -22,34 +35,54 @@ interface AuthState {
   checkSession: () => Promise<void>;
 }
 
-// Membuat store Zustand untuk mengelola status autentikasi pengguna
+/**
+ * Zustand Store untuk Authentication
+ */
 export const useAuthStore = create<AuthState>((set) => ({
+  // State awal
   session: null,
   isLoggedIn: false,
 
-  // Fungsi login pengguna menggunakan email dan password
+  /**
+   * Login pengguna dengan email dan password
+   * @param email - Email pengguna
+   * @param password - Password pengguna
+   * @returns Promise<boolean> - true jika berhasil, false jika gagal
+   */
   login: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.session) return false;
+
     set({ session: data.session as SupabaseSession, isLoggedIn: true });
     return true;
   },
 
-  // Fungsi registrasi pengguna baru
+  /**
+   * Registrasi pengguna baru
+   * @param email - Email pengguna baru
+   * @param password - Password pengguna baru
+   * @returns Promise dengan status success dan pesan error jika ada
+   */
   register: async (email, password) => {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return { success: false, message: error.message };
+
     set({ session: data.session as SupabaseSession, isLoggedIn: !!data.session });
     return { success: true };
   },
 
-  // Fungsi logout untuk mengakhiri sesi pengguna
+  /**
+   * Logout pengguna dan hapus session
+   */
   logout: async () => {
     await supabase.auth.signOut();
     set({ session: null, isLoggedIn: false });
   },
 
-  // Fungsi untuk memeriksa sesi pengguna yang masih aktif
+  /**
+   * Cek session yang masih aktif dari Supabase
+   * Digunakan saat aplikasi pertama kali dibuka
+   */
   checkSession: async () => {
     const { data } = await supabase.auth.getSession();
     set({ session: data.session as SupabaseSession | null, isLoggedIn: !!data.session });

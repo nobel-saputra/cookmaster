@@ -1,175 +1,307 @@
-# CookMaster - Aplikasi Manajemen Resep 🍳
+# CookMaster - Aplikasi Manajemen Resep
 
 **Link Video Demo:** https://www.loom.com/share/6c5ad6e522fd48ee9d402cfc50b59181
 
-CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan React Native dan Expo. Aplikasi ini memungkinkan pengguna untuk menemukan, membeli, dan mengelola resep masakan dengan fungsionalitas keranjang belanja terintegrasi dan otentikasi pengguna.
+CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan React Native dan Expo. Aplikasi ini memungkinkan pengguna untuk menemukan, membeli, dan mengelola resep masakan dengan fungsionalitas keranjang belanja terintegrasi, otentikasi pengguna, dan **Deep Link** untuk navigasi langsung ke konten spesifik.
 
-## Fitur-fitur
+## Fitur-fitur Utama
 
-- **Otentikasi Pengguna**: Sistem login dan pendaftaran yang aman dengan verifikasi email
-- **Penemuan Resep**: Jelajahi dan cari berbagai resep
-- **Manajemen Resep**: Tambah, edit, dan hapus resep (untuk pembuat konten)
-- **Sistem Pembelian**: Beli resep dan akses di koleksi pribadi Anda
-- **Keranjang Belanja**: Tambahkan resep ke keranjang untuk pembelian nanti
-- **Detail Resep**: Lihat informasi resep secara detail dengan gambar dan instruksi
-- **Profil Pengguna**: Kelola akun dan resep yang telah dibeli
-- **Upload File**: Upload gambar resep dan dokumen PDF instruksi
-- **Sistem Pembelian Lengkap**: Riwayat pembelian dan manajemen resep terbeli
-- **Validasi Form**: Validasi input form menggunakan Zod untuk keamanan dan kenyamanan
-- **Badge Resep Terbeli**: Indikator visual untuk resep yang telah dibeli
-- **Tampilan Animasi**: UI dengan efek animasi untuk pengalaman pengguna yang lebih baik
+### Otentikasi & Keamanan
+
+- Sistem login dan pendaftaran yang aman dengan Supabase Auth
+- Verifikasi email otomatis
+- Session management dengan auto-check
+- Validasi form menggunakan Zod (password harus mengandung huruf besar, kecil, dan angka)
+
+### Manajemen Resep (CRUD Lengkap)
+
+- **Create**: Tambah resep baru dengan gambar, deskripsi, bahan, dan langkah-langkah
+- **Read**: Jelajahi katalog resep dengan detail lengkap
+- **Update**: Edit resep yang sudah dibuat (judul, harga, gambar, dll)
+- **Delete**: Hapus resep beserta file terkait dari storage
+
+### Sistem E-Commerce
+
+- Sistem pembelian resep premium
+- Keranjang belanja untuk pembelian multiple items
+- Riwayat pembelian (purchase history)
+- Badge visual untuk resep yang sudah dibeli
+- Checkout dan payment flow
+
+### Deep Link Support
+
+- **Custom URL Scheme**: `cookmaster://`
+- Navigasi langsung ke halaman resep via link
+- Testing command: `npx uri-scheme open cookmaster://resep/[ID] --android`
+- Perfect untuk sharing dan notifikasi
+
+### File Management
+
+- Upload gambar resep (JPEG, PNG)
+- Upload file PDF untuk instruksi detail
+- Integrasi dengan Supabase Storage
+- Auto-delete file saat resep dihapus
+
+### UI/UX Modern
+
+- Animasi halus dengan React Native Reanimated
+- Linear gradient effects
+- Toast notifications untuk feedback
+- Responsive design untuk berbagai ukuran layar
 
 ## Teknologi yang Digunakan
 
-- **Framework**: [Expo](https://expo.dev) dengan React Native
-- **Manajemen State**: [Zustand](https://github.com/pmndrs/zustand)
-- **Database**: [Supabase](https://supabase.com) (PostgreSQL, Auth, Storage)
-- **Komponen UI**: Komponen bawaan React Native dengan ikon vektor
-- **Navigasi**: Expo Router dengan routing berbasis file
-- **Penanganan File**: Expo DocumentPicker, Expo Image Picker, dan base64-arraybuffer untuk upload gambar dan PDF
-- **Notifikasi**: React Native Toast Message untuk pesan UI
-- **Efek Visual**: Expo Linear Gradient untuk efek tampilan
-- **Animasi**: React Native Reanimated untuk efek animasi halus
-- **Utilitas File**: React Native FS untuk manajemen file lokal
-- **Ikon Vektor**: Expo Vector Icons dan React Native Vector Icons
-- **Validasi**: [Zod](https://github.com/colinhacks/zod) untuk validasi formulir
+### Core Stack
+
+- **Framework**: [Expo SDK 54](https://expo.dev) + React Native
+- **Language**: TypeScript + TSX
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Backend**: [Supabase](https://supabase.com)
+  - PostgreSQL Database
+  - Authentication
+  - Storage (Files & Images)
+  - Real-time sync
+
+### Navigation & Routing
+
+- **Expo Router**: File-based routing system
+- **Deep Linking**: Custom URL scheme support
+
+### UI Components & Styling
+
+- React Native core components
+- Expo Vector Icons
+- React Native Vector Icons
+- Expo Linear Gradient
+- React Native Reanimated
+
+### Form & Validation
+
+- [Zod](https://github.com/colinhacks/zod) - Schema validation
+- React Native Toast Message
+
+### File Handling
+
+- Expo DocumentPicker
+- Expo Image Picker
+- base64-arraybuffer
+- React Native FS
 
 ## Struktur Proyek
 
 ```
 cookmaster/
-├── app/                    # Layar aplikasi dan routing
-│   ├── (auth)/            # Layar otentikasi (login, register)
-│   ├── (tabs)/            # Navigasi tab utama (home, explore, cart, profile)
-│   ├── edit/              # Layar pengeditan resep
-│   ├── resep/             # Layar detail dan pembuatan resep
-│   ├── _layout.tsx        # Komponen layout root
-│   └── modal.tsx          # Komponen modal
-├── components/            # Komponen UI yang dapat digunakan kembali
-├── store/                 # Store Zustand untuk manajemen state
-│   ├── authStore.ts       # State otentikasi
-│   ├── cartStore.ts       # State keranjang belanja
-│   ├── homeStore.ts       # State layar beranda
-│   ├── purchaseStore.ts   # State riwayat pembelian
-│   ├── purchaseHistory.ts # State dan fungsi untuk riwayat pembelian
-│   └── resepStore.ts      # State manajemen resep
-├── lib/                   # File-file library
-│   ├── supabase.ts        # Konfigurasi klien Supabase
-│   └── supabaseClient.ts  # Instance klien Supabase
-├── assets/                # Gambar dan aset statis lainnya
-├── hooks/                 # Hook React kustom
-├── constants/             # Konstanta aplikasi
-├── scripts/               # Script untuk pengembangan
-├── .expo/                 # Konfigurasi Expo lokal
-└── node_modules/          # Dependensi proyek
+├── app/                          # Routes & Screens (Expo Router)
+│   ├── (auth)/                   # Auth screens (login, register)
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   ├── (tabs)/                   # Main app tabs
+│   │   ├── index.tsx             # Home
+│   │   ├── explore.tsx           # Browse recipes
+│   │   ├── cart.tsx              # Shopping cart
+│   │   └── profile.tsx           # User profile
+│   ├── resep/                    # Recipe screens
+│   │   ├── [id].tsx              # Recipe detail (Deep Link)
+│   │   └── add.tsx               # Add new recipe
+│   ├── edit/[id].tsx             # Edit recipe screen
+│   ├── _layout.tsx               # Root layout (Auth guard)
+│   └── index.tsx                 # Entry point
+│
+├── store/                        # Zustand State Management
+│   ├── authStore.ts              # Authentication state
+│   ├── resepStore.ts             # Recipe CRUD operations
+│   ├── cartStore.ts              # Shopping cart logic
+│   ├── purchaseHistory.ts        # Purchase tracking
+│   └── homeStore.ts              # Home screen data
+│
+├── lib/                          # Libraries & Configuration
+│   ├── supabaseClient.ts         # Supabase client instance
+│   └── supabase.ts               # Supabase config
+│
+├── components/                   # Reusable UI Components
+├── assets/                       # Images & Static files
+├── constants/                    # App constants
+├── hooks/                        # Custom React Hooks
+└── scripts/                      # Development scripts
 ```
 
-## Instalasi
+## Instalasi & Setup
 
-1. Klon repositori atau navigasi ke direktori proyek
+### Prerequisites
 
-2. Instal dependensi:
+- Node.js (v16 atau lebih tinggi)
+- npm atau yarn
+- Expo CLI
+- Android Studio (untuk emulator) atau physical device dengan Expo Go
+
+### Langkah Instalasi
+
+1. **Clone repository**
+
+   ```bash
+   git clone <repository-url>
+   cd cookmaster
+   ```
+
+2. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-3. Siapkan variabel lingkungan (opsional - fallback tersedia di kode):
-   ```bash
-   # Di file .env
-   EXPO_PUBLIC_SUPABASE_URL=url_supabase_anda
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=kunci_supabase_anon_anda
-   ```
-
-4. Jalankan server pengembangan:
+3. **Setup Environment Variables** (Opsional - ada fallback)
 
    ```bash
-   npx expo start
+   # Buat file .env
+   EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-## Memulai
+4. **Run development server**
 
-Setelah menjalankan aplikasi, Anda akan secara otomatis diarahkan berdasarkan status otentikasi Anda:
+   ```bash
+   npm start
+   ```
 
-- **Pengguna baru**: Diarahkan ke layar pendaftaran
-- **Pengguna yang kembali**: Diarahkan ke layar login
-- **Pengguna yang terotentikasi**: Diarahkan ke tab utama aplikasi
+5. **Run on platform**
+   ```bash
+   npm run android   # Android emulator/device
+   npm run ios       # iOS simulator (macOS only)
+   npm run web       # Web browser
+   ```
 
-## Fungsionalitas Utama
+## Testing Deep Link
 
-### Otentikasi
-- Daftar dengan email dan kata sandi (kata sandi harus mencakup huruf besar, huruf kecil, dan angka)
-- Login dengan email dan kata sandi
-- Manajemen sesi dengan pemeriksaan sesi otomatis
+### Android Emulator/Device
 
-### Layar Beranda
-- Menampilkan pesan sambutan dan nama aplikasi
-- Menampilkan statistik: total resep dan resep terbaru
-- Menyediakan tautan cepat ke halaman jelajah
+```bash
+npx uri-scheme open cookmaster://resep/2b56019b-d6b6-4fd5-a250-433c9ed0799b --android
+```
 
-### Manajemen Resep
-- Jelajahi resep di layar eksplorasi
-- Lihat informasi resep secara detail (judul, deskripsi, harga, gambar)
-- Beli resep secara langsung atau tambahkan ke keranjang
-- Akses resep yang telah dibeli dengan lencana khusus
-- Buat resep baru dengan judul, deskripsi, harga, gambar, dan bahan-bahan
+### iOS Simulator
 
-### Sistem Keranjang
-- Tambahkan resep ke keranjang untuk pembelian nanti
-- Lihat dan kelola item di keranjang Anda
-- Lanjutkan ke checkout untuk beberapa item
+```bash
+npx uri-scheme open cookmaster://resep/[RECIPE_ID] --ios
+```
 
-### Profil Pengguna
-- Akses fitur spesifik pengguna
-- Lihat riwayat pembelian
-- Kelola pengaturan akun
+**Note**: Deep Link memerlukan **Development Build**, tidak bisa ditest di Expo Go.
 
-## Manajemen State
+## Database Schema (Supabase)
 
-Aplikasi ini menggunakan Zustand untuk manajemen state di berbagai domain:
+### Table: `resep`
 
-- **Otentikasi**: Sesi pengguna, status login
-- **Resep**: Daftar resep, pembuatan, pembaruan, penghapusan
-- **Keranjang**: Item di keranjang belanja, penambahan/penghapusan item
-- **Pembelian**: Pelacakan resep yang telah dibeli
-- **Beranda**: Data untuk tampilan layar beranda
+- `id` (uuid, primary key)
+- `judul` (text) - Recipe title
+- `deskripsi` (text) - Description
+- `harga` (numeric) - Price
+- `gambar` (text) - Image URL
+- `bahan` (jsonb) - Ingredients list
+- `langkah` (text[]) - Cooking steps
+- `dibuat_oleh` (uuid) - Creator user ID
+- `created_at` (timestamp)
 
-## API dan Database
+### Table: `cart_items`
 
-Aplikasi ini menggunakan Supabase sebagai layanan backend:
-- Otentikasi dengan email/kata sandi
-- Database PostgreSQL untuk resep dan data pengguna
-- Penyimpanan untuk gambar resep dan file PDF
-- Sinkronisasi data real-time
+- `id` (uuid, primary key)
+- `resep_id` (uuid, foreign key → resep)
+- `user_id` (uuid, foreign key → auth.users)
+- `quantity` (integer)
+- `created_at` (timestamp)
 
-## Platform yang Didukung
+### Table: `purchase_history`
 
-- Android
-- iOS
-- Web (melalui Expo)
+- `id` (uuid, primary key)
+- `resep_id` (uuid, foreign key → resep)
+- `user_id` (uuid, foreign key → auth.users)
+- `purchased_at` (timestamp)
 
-## Script Pengembangan
+## Cara Penggunaan
 
-- `npm start`: Jalankan server pengembangan Expo
-- `npm run android`: Jalankan di emulator/perangkat Android
-- `npm run ios`: Jalankan di simulator/perangkat iOS
-- `npm run web`: Jalankan di browser web
-- `npm run lint`: Periksa kode untuk masalah
-- `npm run reset-project`: Atur ulang proyek ke kondisi awal
+### Untuk User Biasa
 
-## Pelajari Lebih Lanjut
+1. **Register/Login** - Buat akun atau masuk dengan email
+2. **Browse Recipes** - Lihat katalog resep di tab Explore
+3. **View Details** - Klik resep untuk melihat detail lengkap
+4. **Add to Cart** - Tambahkan ke keranjang atau beli langsung
+5. **Checkout** - Proses pembelian untuk mengakses resep premium
+6. **Access Purchased** - Resep yang sudah dibeli ditandai dengan badge
 
-- [Dokumentasi Expo](https://docs.expo.dev): Panduan komprehensif tentang fitur-fitur Expo
-- [Dokumentasi React Native](https://reactnative.dev): Untuk fitur-fitur spesifik React Native
-- [Dokumentasi Supabase](https://supabase.com/docs): Untuk detail implementasi backend
-- [Dokumentasi Zustand](https://docs.pmnd.rs/zustand/getting-started/introduction): Untuk pola manajemen state
+### Untuk Content Creator
 
-## Kontribusi
+1. **Login** sebagai creator
+2. **Tambah Resep** - Klik tombol "+" di tab Explore
+3. **Upload Media** - Pilih gambar dan/atau file PDF
+4. **Set Price** - Tentukan harga resep
+5. **Publish** - Simpan resep untuk ditampilkan di katalog
+6. **Edit/Delete** - Kelola resep yang sudah dibuat
 
-1. Fork repositori
-2. Buat branch fitur (`git checkout -b fitur/fitur-luar-biasa`)
-3. Lakukan perubahan Anda
-4. Commit perubahan Anda (`git commit -m 'Tambahkan fitur luar biasa'`)
-5. Push ke branch (`git push origin fitur/fitur-luar-biasa`)
-6. Buka Pull Request
+## Available Scripts
 
+```bash
+npm start          # Start Expo dev server
+npm run android    # Run on Android
+npm run ios        # Run on iOS
+npm run web        # Run on Web
+npm run lint       # Run ESLint
+npm run reset-project  # Reset to clean state
+```
+
+## Development Tips
+
+### Build untuk Testing Deep Link
+
+```bash
+npx expo run:android   # Creates development build
+```
+
+### Clear Cache
+
+```bash
+npm start --clear
+```
+
+### Check Deep Link Scheme
+
+```bash
+npx uri-scheme list --android
+```
+
+## Dokumentasi Tambahan
+
+- [Expo Documentation](https://docs.expo.dev)
+- [React Native Docs](https://reactnative.dev)
+- [Supabase Docs](https://supabase.com/docs)
+- [Zustand Guide](https://docs.pmnd.rs/zustand)
+- [Expo Deep Linking](https://docs.expo.dev/guides/deep-linking/)
+
+## Troubleshooting
+
+### Build Gagal (NDK Error)
+
+```bash
+# Buka Android Studio → SDK Manager → Install NDK (Side by side)
+```
+
+### Deep Link Tidak Jalan
+
+- Pastikan menggunakan **Development Build** (bukan Expo Go)
+- Cek scheme di `app.json`
+- Test dengan command: `npx uri-scheme open cookmaster://resep/[ID] --android`
+
+### Supabase Connection Error
+
+- Cek `.env` atau hardcoded credentials di `lib/supabaseClient.ts`
+- Pastikan internet connection aktif
+
+## Kontributor
+
+**I Made Nobel Saputra**  
+Pemrograman Mobile - 2026
+
+## License
+
+This project is for educational purposes.
+
+---
+
+**Made with love using Expo & Supabase**

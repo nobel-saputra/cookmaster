@@ -17,7 +17,8 @@ import { idStyles as styles } from "./style/[id]";
 // Komponen utama halaman detail resep
 export default function DetailResepPage() {
   // Ambil parameter id dari URL
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const id = typeof params.id === "string" ? params.id : undefined;
   const router = useRouter();
 
   // Inisialisasi store yang digunakan
@@ -36,13 +37,16 @@ export default function DetailResepPage() {
   const [isPurchasedFromDB, setIsPurchasedFromDB] = useState(false);
 
   // Cek status pembelian resep
-  const recipeId = resep?.id ?? id!;
-  const isRecipePurchased = isPurchased(recipeId) || isPurchasedFromDB;
+  const recipeId = resep?.id ?? id;
+  const isRecipePurchased = recipeId ? isPurchased(recipeId) || isPurchasedFromDB : false;
 
   // Ambil data resep berdasarkan ID dan cek status pembelian
   useEffect(() => {
     const getData = async () => {
-      if (!id) return setIsLoading(false);
+      if (!id) {
+        setIsLoading(false);
+        return;
+      }
       setIsLoading(true);
       try {
         const data = await findResepById(id as string);
