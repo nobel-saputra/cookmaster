@@ -1,54 +1,54 @@
-/**
- * Root Layout Component
- *
- * Komponen ini berfungsi sebagai wrapper utama aplikasi yang menangani:
- * - Session management (pengecekan status login pengguna)
- * - Authentication routing (redirect ke halaman sesuai status login)
- * - Global Toast notifications
- */
+// app/_layout.tsx
 
+import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authStore";
 import { Slot, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Toast from "react-native-toast-message";
 
 export default function RootLayout() {
-  // Ambil state dan fungsi dari authentication store
   const { isLoggedIn, checkSession } = useAuthStore();
   const router = useRouter();
+  const hasHandledInitialRouting = useRef(false);
 
-  /**
-   * Effect untuk verifikasi session saat aplikasi pertama kali dimuat
-   * Akan mengecek apakah user sudah login atau belum, lalu melakukan redirect
-   */
   useEffect(() => {
-    const verify = async () => {
-      // Cek session dari Supabase
+    const init = async () => {
+      if (hasHandledInitialRouting.current) return;
+      hasHandledInitialRouting.current = true;
+
+      // 1️⃣ CLAIM DEFERRED DEEP LINK
+      const { data: deferred } = await supabase.from("deferred_links").select("*").eq("claimed", false).order("created_at", { ascending: false }).limit(1).single();
+
+      if (deferred) {
+        // tandai sudah dipakai
+        await supabase.from("deferred_links").update({ claimed: true }).eq("id", deferred.id);
+
+        // redirect ke target
+        if (deferred.target === "recipe") {
+          router.replace({
+            pathname: "/resep/[id]",
+            params: { id: deferred.target_id },
+          });
+          return; // ⛔ STOP — jangan lanjut auth
+        }
+      }
+
+      // 2️⃣ AUTH FLOW (JALAN KALAU TIDAK ADA DEFERRED LINK)
       await checkSession();
 
-      // Redirect berdasarkan status login
       if (isLoggedIn) {
-        // Jika sudah login, arahkan ke halaman utama (tabs)
-        router.replace({
-          pathname: "/(tabs)",
-        });
+        router.replace("/(tabs)");
       } else {
-        // Jika belum login, arahkan ke halaman login
-        router.replace({
-          pathname: "/(auth)/login",
-        });
+        router.replace("/(auth)/login");
       }
     };
 
-    verify();
-  }, [isLoggedIn, checkSession, router]);
+    init();
+  }, [checkSession, isLoggedIn, router]);
 
   return (
     <>
-      {/* Slot untuk render child routes */}
       <Slot />
-
-      {/* Toast component untuk notifikasi global */}
       <Toast />
     </>
   );

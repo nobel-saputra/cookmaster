@@ -6,9 +6,8 @@ import { useCartStore } from "@/store/cartStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
-
 
 // Halaman keranjang belanja
 export default function CartPage() {
@@ -23,7 +22,7 @@ export default function CartPage() {
   // Proses checkout
   const handleCheckout = () => {
     if (!userId || cartItems.length === 0 || loading) return;
-    const totalHarga = cartItems.reduce((sum, item) => sum + (item.harga || 0), 0);
+    const totalHarga = cartItems.reduce((sum: number, item: any) => sum + (item.harga || 0), 0);
 
     Alert.alert("Konfirmasi Pembelian", `Total belanja Anda Rp ${totalHarga.toLocaleString("id-ID")}. Lanjutkan pembayaran?`, [
       { text: "Batal", style: "cancel" },
@@ -69,7 +68,7 @@ export default function CartPage() {
     );
   }
 
-  const totalHarga = cartItems.reduce((sum, item) => sum + (item.harga || 0), 0);
+  const totalHarga = cartItems.reduce((sum: number, item: any) => sum + (item.harga || 0), 0);
 
   // Tampilan utama
   return (
@@ -114,7 +113,7 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 18, color: "red" },
   emptyText: { fontSize: 18, color: "#999", marginTop: 10, marginBottom: 20 },
   scrollContent: { padding: 15 },
-  header: { fontSize: 22, fontWeight: "bold", marginBottom: 20, color: "#333", marginTop: 30, },
+  header: { fontSize: 22, fontWeight: "bold", marginBottom: 20, color: "#333", marginTop: 30 },
 
   cartItem: {
     flexDirection: "row",
@@ -167,4 +166,3 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 });
-

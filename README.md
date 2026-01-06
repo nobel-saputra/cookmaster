@@ -35,6 +35,26 @@ CookMaster adalah aplikasi manajemen resep yang komprehensif dibangun dengan Rea
 - Testing command: `npx uri-scheme open cookmaster://resep/[ID] --android`
 - Perfect untuk sharing dan notifikasi
 
+### Deferred Deep Link (Custom Implementation)
+
+Fitur ini memungkinkan aplikasi untuk mendeteksi "pending link" saat pertama kali dibuka, berguna untuk skenario instalasi baru dari link promosi.
+
+**Cara Kerja:**
+
+1. Aplikasi mengecek tabel `deferred_links` di Supabase saat startup.
+2. Jika ada link dengan status `claimed: false` (diambil yang terbaru), aplikasi akan mengklaimnya (`claimed: true`).
+3. User otomatis diarahkan ke halaman target (misal: detail resep) tanpa login ulang.
+
+**Cara Testing:**
+
+1. Buka Supabase Dashboard > Table Editor > `deferred_links`.
+2. Insert row baru:
+   - `target`: 'recipe'
+   - `target_id`: [UUID Resep yang valid]
+   - `claimed`: false
+3. Restart aplikasi (Reload Expo).
+4. Aplikasi akan otomatis masuk ke halaman resep tersebut.
+
 ### File Management
 
 - Upload gambar resep (JPEG, PNG)
@@ -214,6 +234,14 @@ npx uri-scheme open cookmaster://resep/[RECIPE_ID] --ios
 - `resep_id` (uuid, foreign key → resep)
 - `user_id` (uuid, foreign key → auth.users)
 - `purchased_at` (timestamp)
+
+### Table: `deferred_links`
+
+- `id` (uuid, primary key)
+- `created_at` (timestamp)
+- `target` (text) - e.g., 'recipe'
+- `target_id` (uuid) - ID of the target content
+- `claimed` (boolean) - Default: false
 
 ## Cara Penggunaan
 

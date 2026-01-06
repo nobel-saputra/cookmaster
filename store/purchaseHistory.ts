@@ -1,7 +1,17 @@
-// app/store/purchaseHistory.ts
-import { create } from "zustand";
-import { supabase } from "@/lib/supabase";
+/**
+ * Purchase History Store
+ *
+ * Store ini mengelola riwayat pembelian resep oleh user.
+ * Berinteraksi dengan tabel 'purchase_history' di Supabase.
+ * Fitur: Mencatat pembelian baru, mengambil history, dan pengecekan status kepemilikan resep.
+ */
 
+import { supabase } from "@/lib/supabase";
+import { create } from "zustand";
+
+/**
+ * Interface dasar data riwayat pembelian
+ */
 export interface PurchaseHistory {
   id: string;
   user_id: string;
@@ -12,12 +22,18 @@ export interface PurchaseHistory {
   updated_at?: string;
 }
 
+/**
+ * Interface payload untuk membuat data pembelian baru
+ */
 export interface CreatePurchaseHistory {
   user_id: string;
   recipe_id: string;
   price: number;
 }
 
+/**
+ * Interface extended yang mencakup detail resep (joined data)
+ */
 export interface PurchaseHistoryWithRecipe extends PurchaseHistory {
   recipe?: {
     judul: string;
@@ -26,11 +42,15 @@ export interface PurchaseHistoryWithRecipe extends PurchaseHistory {
   };
 }
 
+/**
+ * Interface State Purchase History Store
+ */
 interface PurchaseHistoryState {
   purchaseHistory: PurchaseHistoryWithRecipe[];
   isLoading: boolean;
   error: string | null;
 
+  // Actions
   addPurchaseHistory: (data: CreatePurchaseHistory) => Promise<PurchaseHistory | null>;
   fetchPurchaseHistory: (userId: string) => Promise<void>;
   fetchPurchaseHistoryWithRecipe: (userId: string) => Promise<void>;
@@ -40,11 +60,19 @@ interface PurchaseHistoryState {
   reset: () => void;
 }
 
+/**
+ * Zustand Store untuk Purchase History
+ */
 export const usePurchaseHistoryStore = create<PurchaseHistoryState>((set, get) => ({
   purchaseHistory: [],
   isLoading: false,
   error: null,
 
+  /**
+   * Menambahkan data riwayat pembelian baru ke database
+   * @param data - Object berisi user_id, recipe_id, dan price
+   * @returns Data pembelian baru atau null jika gagal
+   */
   addPurchaseHistory: async (data) => {
     set({ isLoading: true, error: null });
     try {
@@ -74,6 +102,9 @@ export const usePurchaseHistoryStore = create<PurchaseHistoryState>((set, get) =
     }
   },
 
+  /**
+   * Fetch riwayat pembelian user (tanpa join resep)
+   */
   fetchPurchaseHistory: async (userId) => {
     set({ isLoading: true, error: null });
     try {
@@ -91,6 +122,10 @@ export const usePurchaseHistoryStore = create<PurchaseHistoryState>((set, get) =
     }
   },
 
+  /**
+   * Fetch riwayat pembelian LENGKAP dengan detail resep
+   * Digunakan untuk menampilkan list 'Resep Saya' di profil
+   */
   fetchPurchaseHistoryWithRecipe: async (userId) => {
     set({ isLoading: true, error: null });
     try {
@@ -121,6 +156,11 @@ export const usePurchaseHistoryStore = create<PurchaseHistoryState>((set, get) =
     }
   },
 
+  /**
+   * Cek apakah user sudah membeli resep tertentu
+   * Digunakan untuk validasi akses konten premium
+   * @returns boolean - true jika sudah dibeli
+   */
   checkIfPurchased: async (userId, recipeId) => {
     try {
       const { data, error } = await supabase.from("purchase_history").select("id").eq("user_id", userId).eq("recipe_id", recipeId).maybeSingle();
@@ -133,6 +173,9 @@ export const usePurchaseHistoryStore = create<PurchaseHistoryState>((set, get) =
     }
   },
 
+  /**
+   * Ambil detail pembelian spesifik berdasarkan ID
+   */
   getPurchaseById: async (id) => {
     try {
       const { data, error } = await supabase.from("purchase_history").select("*").eq("id", id).single();
@@ -146,6 +189,7 @@ export const usePurchaseHistoryStore = create<PurchaseHistoryState>((set, get) =
     }
   },
 
+  // Reset helpers
   clearError: () => set({ error: null }),
   reset: () => set({ purchaseHistory: [], isLoading: false, error: null }),
 }));

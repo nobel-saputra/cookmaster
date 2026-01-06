@@ -293,6 +293,12 @@ export default function DetailResepPage() {
                 )}
               </Pressable>
             </View>
+
+            {/* Tombol Kembali */}
+            <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.manageButton, { marginTop: 12, backgroundColor: "#F8F9FA", borderColor: "#E9ECEF" }, pressed && styles.manageButtonPressed]}>
+              <MaterialCommunityIcons name="arrow-left" size={24} color="#495057" />
+              <Text style={{ fontSize: 15, fontWeight: "700", color: "#495057" }}>Kembali</Text>
+            </Pressable>
           </View>
         </View>
 
